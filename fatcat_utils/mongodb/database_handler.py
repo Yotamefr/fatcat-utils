@@ -516,8 +516,8 @@ class DatabaseHandler:
             if "type" not in value:
                 return False
 
-            if value["type"] not in ["string", "integer", "float", "character", "any",
-                                     "string[]", "integer[]", "float[]", "character[]", "any[]",
+            if value["type"] not in ["string", "boolean", "integer", "float", "character", "any",
+                                     "string[]", "boolean[]", "integer[]", "float[]", "character[]", "any[]",
                                      "dictionary"]:
                 return False
         return True
