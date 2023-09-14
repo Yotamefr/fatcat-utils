@@ -1,5 +1,6 @@
 import os
-from typing import TypedDict, Optional
+from typing import Optional
+from typing_extensions import TypedDict
 
 
 class MongoConfig(TypedDict):

@@ -10,6 +10,7 @@ python = "^3.8"
 aio-pika = "^9.2.1"
 motor = "^3.2.0"
 elasticsearch-logging-handler = {git = "https://github.com/Yotamefr/python-elasticsearch-logging"}
+typing-extensions = "^4.7.1"
 
 
 [tool.poetry.group.dev.dependencies]

@@ -1,4 +1,5 @@
-from typing import List, TypedDict, Optional, Dict, Any
+from typing import List, Optional, Dict, Any
+from typing_extensions import TypedDict
 from bson import ObjectId
 
 

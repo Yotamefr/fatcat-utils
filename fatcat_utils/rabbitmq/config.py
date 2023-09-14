@@ -1,5 +1,5 @@
 import os
-from typing import TypedDict
+from typing_extensions import TypedDict
 
 
 class RabbitConfig(TypedDict):
