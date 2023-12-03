@@ -2,6 +2,7 @@ import asyncio
 import json
 from enum import Enum, auto
 from typing import Callable, Dict, List
+from functools import wraps
 import aio_pika
 from fatcat_utils.logger import logger
 from .base_rabbit import BaseRabbitMQ
@@ -23,7 +24,7 @@ class MessageStatus(Enum):
 
 class Consumer(BaseRabbitMQ):
     _listeners: Dict[str, List[Callable]]
-    _background_listeners: Dict[str, asyncio.Task]
+    _background_listeners: Dict[str, asyncio.Task, list, dict]
 
     def __init__(self):
         super().__init__()
@@ -45,13 +46,20 @@ class Consumer(BaseRabbitMQ):
             raise TypeError("`queue_name` object should be a string.")
 
         def decorator(func: Callable):
-            logger.debug("Adding a queue to the listeners list")
-            self._listeners[queue_name] = self._listeners.get(
-                queue_name, [(func, ack)])
-            if self._listeners[queue_name] == [(func, ack)]:
-                if self._server is not None:
-                    self._spawn_new_listener(queue_name)
-            return func
+
+            @wraps(func)
+            def inner(*args, **kwargs):
+                logger.debug("Adding a queue to the listeners list")
+                self._listeners[queue_name] = self._listeners.get(
+                    queue_name, [(func, ack, args, kwargs)])
+                
+                if self._listeners[queue_name] == [(func, ack, args, kwargs)]:
+                    if self._server is not None:
+                        self._spawn_new_listener(queue_name)
+                
+                return func
+            
+            return inner
 
         return decorator
 
@@ -150,7 +158,7 @@ class Consumer(BaseRabbitMQ):
                 logger.info("No active listeners. Killing listener.")
                 break
 
-            for listener, ack_time in self._listeners[queue_name]:
+            for listener, ack_time, args, kwargs in self._listeners[queue_name]:
                 if isinstance(listener, staticmethod):
                     listener = listener.__func__
                 
@@ -166,9 +174,9 @@ class Consumer(BaseRabbitMQ):
                 try:
                     logger.info("Calling the listener handler")
                     if asyncio.iscoroutinefunction(listener):
-                        status = await listener(message)
+                        status = await listener(*args, message, **kwargs)
                     elif isinstance(listener, Callable):
-                        status = listener(message)
+                        status = listener(*args, message, **kwargs)
                 except Exception as e:
                     logger.error(
                         "Failed to execute handler. Sending it to the failed queue.", exc_info=e)

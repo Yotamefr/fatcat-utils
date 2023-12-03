@@ -9,3 +9,6 @@ class LifeIsASimulation(Exception):
 
 class InvalidSchema(Exception):
     pass
+
+class MongoInsertException(Exception):
+    pass
