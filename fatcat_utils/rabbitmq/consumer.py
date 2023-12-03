@@ -1,7 +1,7 @@
 import asyncio
 import json
 from enum import Enum, auto
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Tuple
 from functools import wraps
 import aio_pika
 from fatcat_utils.logger import logger
@@ -23,8 +23,8 @@ class MessageStatus(Enum):
 
 
 class Consumer(BaseRabbitMQ):
-    _listeners: Dict[str, List[Callable]]
-    _background_listeners: Dict[str, asyncio.Task, list, dict]
+    _listeners: Dict[str, List[Tuple[Callable, AckTime, list, dict]]]
+    _background_listeners: Dict[str, asyncio.Task]
 
     def __init__(self):
         super().__init__()
