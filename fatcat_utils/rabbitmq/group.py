@@ -15,7 +15,7 @@ class ListenerGroup:
 
 class Listener:
     def __init__(self, queue_name: str, func: Coroutine, ack_time: AckTime = AckTime.Manual, instance: ListenerGroup = None):
-        if instance is not None or not isinstance(instance, ListenerGroup):
+        if instance is not None and not isinstance(instance, ListenerGroup):
             # TODO
             raise Exception()
         if not asyncio.iscoroutinefunction(func):
