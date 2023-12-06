@@ -72,5 +72,5 @@ class FatCat:
                 # TODO
                 raise Exception()
             
-            return Listener(queue, ack_time, func)
+            return Listener(queue, func, ack_time)
         return inner
