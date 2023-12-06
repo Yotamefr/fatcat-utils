@@ -1,26 +1,13 @@
 import asyncio
 import json
-from enum import Enum, auto
 from typing import Callable, Dict, List, Tuple
-from functools import wraps
 import aio_pika
 from fatcat_utils.logger import logger
 from .base_rabbit import BaseRabbitMQ
 from .config import RABBIT_CONFIG
 from .exceptions import AlreadyExists
 from .group import Listener
-
-
-class AckTime(Enum):
-    Start = auto()
-    End = auto()
-    Manual = auto()
-
-
-class MessageStatus(Enum):
-    Acked = auto()
-    Unacked = auto()
-    Rejected = auto()
+from .enums import MessageStatus, AckTime
 
 
 class Consumer(BaseRabbitMQ):

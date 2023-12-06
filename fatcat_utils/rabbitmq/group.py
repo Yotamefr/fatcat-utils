@@ -1,7 +1,7 @@
 import asyncio
 import inspect
 from typing import Any, Coroutine, Generator
-from . import AckTime
+from .enums import AckTime
 
 
 
