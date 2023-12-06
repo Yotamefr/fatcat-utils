@@ -1,7 +1,9 @@
 import logging
 import asyncio
-import os
-from .rabbitmq import RabbitMQHandler
+import inspect
+from typing import Union, Coroutine
+from .rabbitmq import RabbitMQHandler, ListenerGroup, AckTime
+from .rabbitmq.group import Listener
 from .mongodb import DatabaseHandler
 from .logger import generate_logger
 
@@ -53,3 +55,22 @@ class FatCat:
             loop.stop()
         else:
             loop.call_later(5, self.check_listeners_status)
+
+    def add_listener_group(self, group: ListenerGroup):
+        for listener in group._add_listeners():
+            self.rabbit.subscribe_listener(listener)
+    
+    def create_listener(self, queue: str, ack_time: AckTime = AckTime.Manual):
+        def inner(func: Union[Coroutine, Listener]):
+            if isinstance(func, Listener):
+                # TODO
+                raise Exception()
+            
+            sig = inspect.signature(func)
+            if len(sig.parameters) == 0 or \
+                (len(sig.parameters) == 1 and list(sig.parameters.keys())[0] == "self"):
+                # TODO
+                raise Exception()
+            
+            return Listener(queue, ack_time, func)
+        return inner

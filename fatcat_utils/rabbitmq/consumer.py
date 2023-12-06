@@ -8,6 +8,7 @@ from fatcat_utils.logger import logger
 from .base_rabbit import BaseRabbitMQ
 from .config import RABBIT_CONFIG
 from .exceptions import AlreadyExists
+from .group import Listener
 
 
 class AckTime(Enum):
@@ -30,6 +31,17 @@ class Consumer(BaseRabbitMQ):
         super().__init__()
         self._listeners = dict()
         self._background_listeners = dict()
+    
+    def subscribe_listener(self, listener: Listener):
+        logger.debug("Adding a queue to the listeners list")
+        if not isinstance(listener, Listener):
+            # TODO
+            raise Exception()
+        
+        self._listeners[listener.queue_name] = self._listeners.get(listener.queue_name, [listener])
+        if self._listeners[listener.queue_name] == [listener]:
+            if self._server is not None:
+                self._spawn_new_listener(listener.queue_name)
 
     def subscribe(self, queue_name: str, *, ack: AckTime = AckTime.Manual) -> Callable:
         """Adds a new listener to the queue
@@ -46,20 +58,9 @@ class Consumer(BaseRabbitMQ):
             raise TypeError("`queue_name` object should be a string.")
 
         def decorator(func: Callable):
-
-            @wraps(func)
-            def inner(*args, **kwargs):
-                logger.debug("Adding a queue to the listeners list")
-                self._listeners[queue_name] = self._listeners.get(
-                    queue_name, [(func, ack, args, kwargs)])
-                
-                if self._listeners[queue_name] == [(func, ack, args, kwargs)]:
-                    if self._server is not None:
-                        self._spawn_new_listener(queue_name)
-                
-                return func
-            
-            return inner
+            listener = Listener(queue_name, func, ack)
+            self.subscribe_listener(listener)
+            return listener
 
         return decorator
 
@@ -155,28 +156,22 @@ class Consumer(BaseRabbitMQ):
                 continue
 
             if len(self._listeners[queue_name]) == 0:
-                logger.info("No active listeners. Killing listener.")
+                logger.info("No active listeners. Killing listener worker.")
                 break
 
-            for listener, ack_time, args, kwargs in self._listeners[queue_name]:
-                if isinstance(listener, staticmethod):
-                    listener = listener.__func__
-                
-                if not asyncio.iscoroutinefunction(listener) and not isinstance(listener, Callable):
+            for listener in self._listeners[queue_name]:
+                if not isinstance(listener, Listener):
                     logger.info(
                         "I don't know how I got here. What is this handler? I'll keep listening though.")
                     continue
 
-                if ack_time == AckTime.Start:
+                if listener.ack_time == AckTime.Start:
                     logger.info(
                         "I was asked to ack in advanced (for some reason. Not judging though). Acknowledging the message")
                     await message.ack()
                 try:
                     logger.info("Calling the listener handler")
-                    if asyncio.iscoroutinefunction(listener):
-                        status = await listener(*args, message, **kwargs)
-                    elif isinstance(listener, Callable):
-                        status = listener(*args, message, **kwargs)
+                    status = await listener(message)
                 except Exception as e:
                     logger.error(
                         "Failed to execute handler. Sending it to the failed queue.", exc_info=e)
@@ -199,7 +194,7 @@ class Consumer(BaseRabbitMQ):
                         body["FATCAT_QUEUE"] = message.routing_key
                         await self.send_to_queue(body, RABBIT_CONFIG["failed_queue"])
                         continue
-                    if ack_time == AckTime.End:
+                    if listener.ack_time == AckTime.End:
                         logger.info(
                             "I was asked to ack after the handler finished. Acknowledging the message.")
                         await message.ack()
