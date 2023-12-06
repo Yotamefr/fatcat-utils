@@ -60,7 +60,8 @@ class FatCat:
         for listener in group._add_listeners():
             self.rabbit.subscribe_listener(listener)
     
-    def create_listener(self, queue: str, ack_time: AckTime = AckTime.Manual):
+    @staticmethod
+    def create_listener(queue: str, ack_time: AckTime = AckTime.Manual):
         def inner(func: Union[Coroutine, Listener]):
             if isinstance(func, Listener):
                 # TODO
