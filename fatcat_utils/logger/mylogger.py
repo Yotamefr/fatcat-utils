@@ -13,6 +13,9 @@ def generate_logger(logger_name: str) -> logging.Logger:
     :return: The logger
     :rtype: logging.Logger
     """
+    if logger_name in logging.Logger.manager.loggerDict:
+        return logging.getLogger(logger_name)
+    
     level = logging.DEBUG if os.getenv(
         "FATCAT_LOG_DEBUG", "0") == "1" else logging.INFO
     logging.basicConfig(level=level)
