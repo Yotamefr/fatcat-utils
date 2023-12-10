@@ -162,8 +162,12 @@ class Consumer(BaseRabbitMQ):
                 except Exception as e:
                     logger.error(
                         "Failed to execute handler. Sending it to the failed queue.", exc_info=e)
-                    body = json.loads(message.body)
-                    body["FATCAT_QUEUE"] = message.routing_key
+                    try:
+                        body = json.loads(message.body)
+                    except:
+                        body = { "_NULL_": str(body) }
+                    finally:
+                        body["FATCAT_QUEUE"] = message.routing_key
                     await self.send_to_queue(body, RABBIT_CONFIG["failed_queue"])
                     try:
                         logger.debug("Trying to reject the message")
@@ -177,8 +181,12 @@ class Consumer(BaseRabbitMQ):
                     if status == MessageStatus.Rejected:
                         logger.info(
                             "Message was rejected. Sending it to the failed queue")
-                        body = json.loads(message.body)
-                        body["FATCAT_QUEUE"] = message.routing_key
+                        try:
+                            body = json.loads(message.body)
+                        except:
+                            body = { "_NULL_": str(body) }
+                        finally:
+                            body["FATCAT_QUEUE"] = message.routing_key
                         await self.send_to_queue(body, RABBIT_CONFIG["failed_queue"])
                         continue
                     if listener.ack_time == AckTime.End:
