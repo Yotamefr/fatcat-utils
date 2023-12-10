@@ -164,6 +164,8 @@ class Consumer(BaseRabbitMQ):
                         "Failed to execute handler. Sending it to the failed queue.", exc_info=e)
                     try:
                         body = json.loads(message.body)
+                        if not isinstance(body, dict):
+                            raise TypeError()
                     except:
                         body = { "_NULL_": str(body) }
                     finally:
@@ -183,6 +185,8 @@ class Consumer(BaseRabbitMQ):
                             "Message was rejected. Sending it to the failed queue")
                         try:
                             body = json.loads(message.body)
+                            if not isinstance(body, dict):
+                                raise TypeError()
                         except:
                             body = { "_NULL_": str(body) }
                         finally:
