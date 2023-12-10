@@ -26,7 +26,7 @@ class Listener:
             # TODO
             raise Exception()
         
-        self._queue_name = queue_name,
+        self._queue_name = queue_name
         self._ack_time = ack_time
         self._func = func
         self._instance = instance
