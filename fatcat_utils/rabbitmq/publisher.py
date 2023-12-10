@@ -21,7 +21,7 @@ class Publisher(BaseRabbitMQ):
             raise TypeError("`queue_name` object should be a string.")
         
         channel = await self._server.channel()
-        await channel.declare_queue(queue_name)
+        await channel.declare_queue(queue_name, durable=True)
         logger.info(f"Sending message to queue {queue_name}")
         await channel.default_exchange.publish(
             aio_pika.Message(body=json.dumps(message, indent=2).encode("utf-8") if isinstance(message, dict) else message if isinstance(message, bytes) else str(message).encode("utf-8")),
