@@ -4,14 +4,12 @@ from typing import Any, Coroutine, Generator
 from .enums import AckTime
 
 
-
-
 class ListenerGroup:
     def _add_listeners(self) -> Generator["Listener", None, None]:
-        for _, method in inspect.getmembers(self, predicate=inspect.ismethod):
-            if isinstance(method, Listener):
-                yield method
-                method._instance = self
+        for _, method in inspect.getmembers(self, predicate=lambda x: isinstance(x, Listener)):
+            yield method
+            method._instance = self
+
 
 class Listener:
     def __init__(self, queue_name: str, func: Coroutine, ack_time: AckTime = AckTime.Manual, instance: ListenerGroup = None):
