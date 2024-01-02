@@ -39,13 +39,34 @@ class Listener:
     def group_instance(self):
         return self._instance
     
+    @group_instance.setter
+    def group_instance(self, group_instance: ListenerGroup):
+        if not isinstance(isinstance, ListenerGroup):
+            # TODO
+            raise Exception()
+        self._instance = group_instance
+    
     @property
     def queue_name(self):
         return self._queue_name
     
+    @queue_name.setter
+    def queue_name(self, queue_name: str):
+        if not isinstance(queue_name, str):
+            # TODO
+            raise Exception()
+        self._queue_name = queue_name
+    
     @property
     def ack_time(self):
         return self._ack_time
+    
+    @ack_time.setter
+    def ack_time(self, ack_time: AckTime):
+        if not isinstance(ack_time, AckTime):
+            # TODO
+            raise Exception()
+        self._ack_time = ack_time
     
     async def __call__(self, *args: Any, **kwargs: Any) -> Any:
         if self._instance is not None:
