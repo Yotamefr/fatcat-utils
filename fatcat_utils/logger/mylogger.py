@@ -22,8 +22,8 @@ def generate_logger(logger_name: str) -> logging.Logger:
 
     logger = logging.getLogger(logger_name)
     logger.setLevel(level)
-    # for handler in logging.root.handlers:
-    #     logging.root.removeHandler(handler)
+    for handler in logging.root.handlers:
+        logging.root.removeHandler(handler)
 
     file_handler = logging.FileHandler(
         filename=f"{logger_name.lower().replace('logger', '')}.log")
